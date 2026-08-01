@@ -1,0 +1,201 @@
+<?php
+/**
+ * Artistique Theme Setup
+ */
+
+// Enqueue styles & scripts with cache busting
+function artistique_assets() {
+    $css_file = get_stylesheet_directory() . '/style.css';
+    $js_file  = get_template_directory() . '/script.js';
+
+    $css_version = file_exists($css_file) ? filemtime($css_file) : '4.1';
+    $js_version  = file_exists($js_file) ? filemtime($js_file) : '4.1';
+
+    wp_enqueue_style('artistique-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500;600&display=swap', [], null);
+    wp_enqueue_style('artistique-style', get_stylesheet_uri(), [], $css_version);
+    wp_enqueue_script('artistique-script', get_template_directory_uri() . '/script.js', [], $js_version, true);
+// Add defer attribute
+add_filter('script_loader_tag', function($tag, $handle) {
+    if ($handle === 'artistique-script') {
+        return str_replace(' src', ' defer src', $tag);
+    }
+    return $tag;
+}, 10, 2);
+}
+add_action('wp_enqueue_scripts', 'artistique_assets');
+
+// Theme supports
+add_theme_support('title-tag');
+add_theme_support('post-thumbnails');
+add_theme_support('menus');
+add_theme_support('html5', ['search-form', 'comment-form', 'comment-list', 'gallery', 'caption']);
+
+// Register navigation menus
+register_nav_menus(['primary' => 'Primary Menu']);
+
+// Add custom image size for portfolio archive (3:4 aspect)
+add_image_size('portfolio-archive', 600, 800, true);
+
+// Portfolio Custom Post Type
+function artistique_portfolio() {
+    register_post_type('portfolio', [
+        'labels'      => ['name' => 'Portfolio', 'singular_name' => 'Project'],
+        'public'      => true,
+        'has_archive' => true,
+        'rewrite'     => ['slug' => 'portfolio'],
+        'supports'    => ['title', 'editor', 'thumbnail'],
+        'menu_icon'   => 'dashicons-images-alt2',
+        'show_in_rest'=> true, // Gutenberg support
+    ]);
+}
+add_action('init', 'artistique_portfolio');
+
+// Testimonials Custom Post Type
+function artistique_testimonials_cpt() {
+    register_post_type('testimonials', [
+        'labels'      => ['name' => 'Testimonials', 'singular_name' => 'Testimonial'],
+        'public'      => true,
+        'supports'    => ['title', 'editor'],
+        'menu_icon'   => 'dashicons-format-quote',
+        'show_in_rest'=> true,
+    ]);
+}
+add_action('init', 'artistique_testimonials_cpt');
+
+// Flush rewrite rules ONLY on theme activation
+function artistique_theme_activation() {
+    artistique_portfolio();
+    artistique_testimonials_cpt();
+    flush_rewrite_rules();
+}
+add_action('after_switch_theme', 'artistique_theme_activation');
+
+// Complete Open Graph tags (replaces the old artistique_opengraph_tags)
+function artistique_opengraph_tags() {
+    if (is_singular('portfolio') && has_post_thumbnail()) {
+        echo '<meta property="og:image" content="' . esc_url(get_the_post_thumbnail_url(null, 'large')) . '">' . "\n";
+        echo '<meta property="og:title" content="' . esc_attr(get_the_title()) . '">' . "\n";
+        echo '<meta property="og:description" content="' . esc_attr(wp_trim_words(get_the_excerpt() ?: get_bloginfo('description'), 20)) . '">' . "\n";
+        echo '<meta property="og:type" content="article">' . "\n";
+        echo '<meta property="og:url" content="' . esc_url(get_permalink()) . '">' . "\n";
+    } elseif (is_front_page()) {
+        echo '<meta property="og:title" content="Artistique Spaces – Luxury Interior Design Studio">' . "\n";
+        echo '<meta property="og:description" content="We transform environments into timeless sanctuaries of elegance.">' . "\n";
+        echo '<meta property="og:type" content="website">' . "\n";
+        echo '<meta property="og:url" content="' . esc_url(home_url()) . '">' . "\n";
+    }
+}
+add_action('wp_head', 'artistique_opengraph_tags');
+// Add meta description automatically
+function artistique_meta_description() {
+    if (is_single() || is_page()) {
+        $excerpt = get_the_excerpt();
+        if ($excerpt) {
+            echo '<meta name="description" content="' . esc_attr(wp_trim_words($excerpt, 20, '...')) . '">' . "\n";
+        }
+    } elseif (is_home() || is_front_page()) {
+        echo '<meta name="description" content="Artistique Spaces – luxury interior design studio crafting timeless sanctuaries of elegance. Full-service interior design in New Delhi.">' . "\n";
+    } elseif (is_post_type_archive('portfolio')) {
+        echo '<meta name="description" content="Explore our portfolio of luxury interior design projects – residential and commercial spaces transformed with artistry and intention.">' . "\n";
+    }
+}
+add_action('wp_head', 'artistique_meta_description', 1);
+// Add Schema markup for Local Business
+function artistique_schema_markup() {
+    if (is_front_page()) {
+        ?>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "InteriorDesignStudio",
+            "name": "Artistique Spaces",
+            "description": "Luxury interior design studio in New Delhi",
+            "image": "<?php echo esc_url(get_template_directory_uri() . '/assets/logo.png'); ?>",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "New Delhi",
+                "addressCountry": "India"
+            },
+            "telephone": "+917014249104",
+            "email": "artistiquespaces@gmail.com",
+            "url": "<?php echo esc_url(home_url()); ?>",
+            "priceRange": "$$$",
+            "sameAs": [
+                "https://www.instagram.com/artistiquespaces"
+            ]
+        }
+        </script>
+        <?php
+    }
+    
+    if (is_singular('portfolio')) {
+        ?>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "name": "<?php the_title_attribute(); ?>",
+            "description": "<?php echo esc_attr(wp_trim_words(get_the_excerpt() ?: get_the_content(), 25)); ?>",
+            "image": "<?php echo esc_url(get_the_post_thumbnail_url(null, 'large')); ?>",
+            "datePublished": "<?php echo get_the_date('c'); ?>"
+        }
+        </script>
+        <?php
+    }
+}
+add_action('wp_head', 'artistique_schema_markup');
+// Custom title filters for specific pages
+function artistique_custom_title($title) {
+    if (is_page('about')) {
+        $title = 'About Us – Luxury Interior Design Studio | Artistique Spaces';
+    } elseif (is_page('services')) {
+        $title = 'Interior Design Services – Full-Service Luxury Design | Artistique Spaces';
+    } elseif (is_page('process')) {
+        $title = 'Our Design Process – How We Create Beautiful Spaces | Artistique Spaces';
+    } elseif (is_page('philosophy')) {
+        $title = 'Design Philosophy – Intentional, Timeless, Harmonious | Artistique Spaces';
+    } elseif (is_post_type_archive('portfolio')) {
+        $title = 'Portfolio – Luxury Interior Design Projects | Artistique Spaces';
+    }
+    return $title;
+}
+add_filter('pre_get_document_title', 'artistique_custom_title');
+// Add canonical URL to avoid duplicate content issues
+function artistique_canonical_url() {
+    if (is_singular()) {
+        echo '<link rel="canonical" href="' . esc_url(get_permalink()) . '">' . "\n";
+    } elseif (is_archive()) {
+        echo '<link rel="canonical" href="' . esc_url(get_pagenum_link(1)) . '">' . "\n";
+    }
+}
+add_action('wp_head', 'artistique_canonical_url');
+// Automatically add alt text to images if missing
+function artistique_auto_image_alt($content) {
+    global $post;
+    $pattern = '/<img(.*?)src=["\'](.*?)["\'](.*?)>/i';
+    $replacement = '<img$1src="$2"$3 alt="' . esc_attr($post->post_title) . '">';
+    return preg_replace($pattern, $replacement, $content);
+}
+add_filter('the_content', 'artistique_auto_image_alt');
+
+// Add lazy loading attribute to all images (already modern browsers support loading="lazy")
+function artistique_add_lazy_loading($content) {
+    if (strpos($content, 'loading="lazy"') === false) {
+        $content = str_replace('<img', '<img loading="lazy"', $content);
+    }
+    return $content;
+}
+add_filter('the_content', 'artistique_add_lazy_loading');
+// Minify inline CSS (optional – or use a plugin like WP Rocket)
+function artistique_minify_html($buffer) {
+    $search = array('/\>[^\S ]+/s', '/[^\S ]+\</s', '/(\s)+/s');
+    $replace = array('>', '<', '\\1');
+    return preg_replace($search, $replace, $buffer);
+}
+// Uncomment if you want to minify HTML (use with caution)
+// ob_start('artistique_minify_html');
+function artistique_preconnect() {
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com">';
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
+}
+add_action('wp_head', 'artistique_preconnect', 0);

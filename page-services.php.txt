@@ -1,0 +1,48 @@
+<?php 
+/* Template Name: Services Page */
+get_header(); ?>
+
+<section class="services parallax-section" id="services">
+    <div class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1920&q=80');"></div>
+    <div class="parallax-overlay" style="background: rgba(245,241,235,0.85);"></div>
+    <div class="section-content">
+        <div class="services-header reveal">
+            <p class="section-label">What We Offer</p>
+            <h2 class="section-title">Comprehensive Design Services</h2>
+        </div>
+        <div class="services-grid">
+            <div class="service-card reveal reveal-delay-1">
+                <div class="service-number">01</div>
+                <h3>Interior Design</h3>
+                <p>Full-service interior design for residences and commercial spaces, from concept development through final styling and installation.</p>
+            </div>
+            <div class="service-card reveal reveal-delay-2">
+                <div class="service-number">02</div>
+                <h3>Space Planning</h3>
+                <p>Strategic layout optimization that enhances flow, functionality, and the overall experience of your environment.</p>
+            </div>
+            <div class="service-card reveal reveal-delay-3">
+                <div class="service-number">03</div>
+                <h3>Custom Furnishings</h3>
+                <p>Bespoke furniture and millwork designed exclusively for your space, crafted by master artisans.</p>
+            </div>
+            <div class="service-card reveal reveal-delay-1">
+                <div class="service-number">04</div>
+                <h3>Art Curation</h3>
+                <p>Thoughtful selection and placement of artwork that complements your interior and reflects your personal narrative.</p>
+            </div>
+            <div class="service-card reveal reveal-delay-2">
+                <div class="service-number">05</div>
+                <h3>Lighting Design</h3>
+                <p>Layered lighting schemes that transform atmosphere, highlight architectural features, and enhance daily living.</p>
+            </div>
+            <div class="service-card reveal reveal-delay-3">
+                <div class="service-number">06</div>
+                <h3>Project Management</h3>
+                <p>Seamless coordination of contractors, vendors, and timelines ensuring a stress-free experience from start to finish.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<?php get_footer(); ?>

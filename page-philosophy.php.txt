@@ -1,0 +1,34 @@
+<?php 
+/* Template Name: Philosophy Page */
+get_header(); ?>
+
+<section class="philosophy parallax-section" id="philosophy">
+    <div class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920&q=80');"></div>
+    <div class="parallax-overlay" style="background: rgba(44,40,32,0.7);"></div>
+    <div class="section-content">
+        <div class="reveal">
+            <p class="section-label">Our Philosophy</p>
+            <h2 class="section-title">Design is not just what it looks like.<br>Design is how it makes you feel.</h2>
+            <p class="philosophy-quote">"We create spaces that breathe, that welcome, that inspire moments of quiet contemplation and joyful gathering alike."</p>
+        </div>
+        <div class="philosophy-pillars reveal">
+            <div class="pillar">
+                <div class="pillar-icon">I</div>
+                <h3>Intentionality</h3>
+                <p>Every element serves a purpose. We eliminate the superfluous to amplify what truly matters.</p>
+            </div>
+            <div class="pillar">
+                <div class="pillar-icon">II</div>
+                <h3>Timelessness</h3>
+                <p>We design beyond trends, creating spaces that remain relevant and beautiful for generations.</p>
+            </div>
+            <div class="pillar">
+                <div class="pillar-icon">III</div>
+                <h3>Harmony</h3>
+                <p>The perfect balance of form, function, light, and texture creates environments of profound peace.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<?php get_footer(); ?>

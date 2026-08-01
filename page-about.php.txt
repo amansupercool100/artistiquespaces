@@ -1,0 +1,38 @@
+<?php
+/* Template Name: About Page */
+get_header(); ?>
+
+<section class="about parallax-section" id="about">
+    <div class="parallax-bg" style="background-image: url('https://artistiquespaces.com/wp-content/uploads/2026/04/cover-photo.jpeg');"></div>
+    <div class="parallax-overlay"></div>
+    <div class="section-content">
+        <div class="about-grid">
+            <div class="about-image reveal">
+                <img src="https://artistiquespaces.com/wp-content/uploads/2026/04/ChatGPT-Image-Apr-15-2026-09_21_37-PM.png" alt="Artistique Spaces Interior" loading="lazy">
+            </div>
+            <div class="about-content reveal reveal-delay-2">
+                <p class="section-label">Our Story</p>
+                <h2 class="section-title">Where Vision Meets Artistry</h2>
+                <p>Founded on the belief that spaces should be both beautiful and deeply personal, Artistique Spaces has spent over a decade transforming residences and commercial environments into works of art.</p>
+                <p>Our approach marries timeless elegance with contemporary sensibilities, creating interiors that transcend trends and speak to the soul of those who inhabit them. We believe that luxury lies not in excess, but in the thoughtful curation of elements that bring joy and serenity.</p>
+                <p>Every project begins with listening—understanding your lifestyle, aspirations, and the emotions you wish your space to evoke. From this foundation, we craft environments that are uniquely, unmistakably yours.</p>
+                <div class="about-stats">
+                    <div class="stat">
+                        <div class="stat-number">150+</div>
+                        <div class="stat-label">Projects Completed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Years of Excellence</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Design Awards</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<?php get_footer(); ?>

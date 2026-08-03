@@ -1,0 +1,373 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // ─── Touch device detection ─────────────────────────────────────
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        document.body.classList.add('touch-device');
+    }
+
+    // ─── Custom Cursor ───────────────────────────────────────────
+    const cursor = document.getElementById('cursor');
+    const follower = document.getElementById('cursorFollower');
+    let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0;
+
+    if (cursor && follower) {
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX; mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        function animateFollower() {
+            followerX += (mouseX - followerX) * 0.12;
+            followerY += (mouseY - followerY) * 0.12;
+            follower.style.left = followerX + 'px';
+            follower.style.top = followerY + 'px';
+            requestAnimationFrame(animateFollower);
+        }
+        animateFollower();
+
+        document.querySelectorAll('a, button, .project, .service-card, .pillar').forEach(el => {
+            el.addEventListener('mouseenter', () => { cursor.classList.add('hovering'); follower.classList.add('hovering'); });
+            el.addEventListener('mouseleave', () => { cursor.classList.remove('hovering'); follower.classList.remove('hovering'); });
+        });
+    }
+
+    // ─── Hero parallax (disabled on touch/mobile for performance) ──
+    const heroImage = document.getElementById('heroImage');
+    if (heroImage) {
+        setTimeout(() => heroImage.classList.add('loaded'), 100);
+
+        const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+        if (!isTouchDevice && window.innerWidth > 768) {
+            window.addEventListener('scroll', () => {
+                const scrolled = window.scrollY;
+                if (scrolled < window.innerHeight) {
+                    heroImage.style.transform = `translateY(${scrolled * 0.25}px) scale(1)`;
+                }
+            }, { passive: true });
+        }
+    }
+
+    // ─── Hero video carousel (crossfade, fixed order, loops back to 1st) ──
+    const heroSlideFrames = document.querySelectorAll('.video-slide iframe');
+    if (heroSlideFrames.length) {
+        const vimeoScript = document.createElement('script');
+        vimeoScript.src = 'https://player.vimeo.com/api/player.js';
+        document.head.appendChild(vimeoScript);
+
+        vimeoScript.onload = () => {
+            const slideEls = document.querySelectorAll('.video-slide');
+            const players = Array.from(heroSlideFrames).map(f => new Vimeo.Player(f));
+            let current = 0;
+            const CROSSFADE_MS = 1500; // must match the .video-slide CSS transition duration
+
+            // ─── True crop-to-fill sizing (works for landscape AND portrait/reel clips) ──
+            const videoAspects = []; // stores {w, h} per iframe once known
+
+            function sizeIframeToCover(iframe, vw, vh) {
+                if (!heroImage || !vw || !vh) return;
+                const cw = heroImage.clientWidth;
+                const ch = heroImage.clientHeight;
+                if (!cw || !ch) return;
+                const containerRatio = cw / ch;
+                const videoRatio = vw / vh;
+                let w, h;
+                if (videoRatio > containerRatio) {
+                    // video is relatively wider than the box -> match height, let width overflow (crop sides)
+                    h = ch;
+                    w = ch * videoRatio;
+                } else {
+                    // video is relatively taller than the box -> match width, let height overflow (crop top/bottom)
+                    w = cw;
+                    h = cw / videoRatio;
+                }
+                iframe.style.width = Math.ceil(w) + 'px';
+                iframe.style.height = Math.ceil(h) + 'px';
+            }
+
+            function resizeAllVideos() {
+                heroSlideFrames.forEach((iframe, i) => {
+                    const dim = videoAspects[i];
+                    if (dim) sizeIframeToCover(iframe, dim.w, dim.h);
+                });
+            }
+
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(resizeAllVideos, 150);
+            });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(resizeAllVideos, 200);
+            });
+
+            players.forEach((player, i) => {
+                player.setVolume(0);
+                if (i !== 0) player.pause();
+                player.on('ended', () => advance(i));
+
+                Promise.all([player.getVideoWidth(), player.getVideoHeight()])
+                    .then(([w, h]) => {
+                        videoAspects[i] = { w, h };
+                        sizeIframeToCover(heroSlideFrames[i], w, h);
+                    })
+                    .catch(() => {
+                        // Fallback: assume standard 16:9 if dimensions can't be read
+                        videoAspects[i] = { w: 16, h: 9 };
+                        sizeIframeToCover(heroSlideFrames[i], 16, 9);
+                    });
+            });
+
+            function advance(fromIndex) {
+                if (fromIndex !== current) return; // ignore late/duplicate events
+                const next = (current + 1) % players.length;
+
+                // Seek and play are independent calls now - if setCurrentTime
+                // rejects or is slow, play() still fires regardless.
+                players[next].setCurrentTime(0).catch(() => {});
+                players[next].play().catch(() => {});
+
+                slideEls[current].classList.remove('active');
+                slideEls[next].classList.add('active');
+
+                const prev = current;
+                current = next;
+
+                setTimeout(() => players[prev].pause(), CROSSFADE_MS);
+            }
+        };
+    }
+
+    // ─── Mobile menu ─────────────────────────────────────────────
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                menuToggle.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+    }
+
+    // ─── Navbar scroll + active link ─────────────────────────────
+    const navbar = document.getElementById('navbar');
+    const sections = document.querySelectorAll('section[id]');
+    const navLinkEls = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 80);
+
+    let current = '';
+    sections.forEach(sec => {
+        if (window.scrollY >= sec.offsetTop - 200) current = sec.getAttribute('id');
+    });
+    navLinkEls.forEach(a => {
+        const href = a.getAttribute('href');
+        // Check if it's a hash link on the homepage OR a full URL matching current page
+        if (href === '#' + current) {
+            a.classList.add('active');
+        } else if (window.location.pathname === '/' && href.startsWith('#')) {
+            a.classList.remove('active');
+        } else if (href === window.location.pathname) {
+            a.classList.add('active');
+        } else {
+            a.classList.remove('active');
+        }
+    });
+});
+
+    // ─── Reveal on scroll ─────────────────────────────────────────
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('active');
+        });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => observer.observe(el));
+
+    // ─── Portfolio Coverflow Carousel ───────────────────────────────
+    const pTrack = document.getElementById('portfolioTrack');
+    if (pTrack) {
+        const pItems = pTrack.querySelectorAll('.portfolio-slide-item');
+        const pDots = document.querySelectorAll('.portfolio-dot');
+        const pTotal = pItems.length || 1;
+        let pCurrent = 0;
+        let pAutoTimer;
+
+        function portfolioGoTo(index) {
+            pCurrent = (index + pTotal) % pTotal;
+
+            pItems.forEach((item, i) => {
+                // Shortest signed distance from the active slide (wraps around)
+                let offset = i - pCurrent;
+                if (offset > pTotal / 2) offset -= pTotal;
+                if (offset < -pTotal / 2) offset += pTotal;
+
+                const absOffset = Math.abs(offset);
+                let scale, opacity, blur, spacing;
+
+                if (absOffset === 0) { scale = 1; opacity = 1; blur = 0; }
+                else if (absOffset === 1) { scale = 0.74; opacity = 0.55; blur = 2; }
+                else if (absOffset === 2) { scale = 0.58; opacity = 0.25; blur = 4; }
+                else { scale = 0.5; opacity = 0; blur = 5; }
+
+                spacing = offset * 58; // percent of item width between slide centers
+
+                item.style.transform = `translate(-50%, -50%) translateX(${spacing}%) scale(${scale})`;
+                item.style.opacity = opacity;
+                item.style.filter = `blur(${blur}px)`;
+                item.style.zIndex = 10 - absOffset;
+                item.style.pointerEvents = absOffset === 0 ? 'auto' : (absOffset <= 2 ? 'auto' : 'none');
+            });
+
+            pDots.forEach((d, i) => d.classList.toggle('active', i === pCurrent));
+        }
+
+        // Clicking a visible side slide brings it to center
+        pItems.forEach((item, i) => {
+            item.addEventListener('click', (e) => {
+                if (i !== pCurrent) {
+                    e.preventDefault();
+                    portfolioGoTo(i);
+                }
+            });
+        });
+
+        const pPrev = document.getElementById('portfolioPrev');
+        const pNext = document.getElementById('portfolioNext');
+        if (pPrev) pPrev.addEventListener('click', () => portfolioGoTo(pCurrent - 1));
+        if (pNext) pNext.addEventListener('click', () => portfolioGoTo(pCurrent + 1));
+        pDots.forEach(dot => dot.addEventListener('click', () => portfolioGoTo(+dot.dataset.index)));
+
+        function startAutoAdvance() {
+            if (pTotal > 1) pAutoTimer = setInterval(() => portfolioGoTo(pCurrent + 1), 6000);
+        }
+        function stopAutoAdvance() {
+            clearInterval(pAutoTimer);
+        }
+
+        const pWrapper = document.querySelector('.portfolio-coverflow');
+        if (pWrapper) {
+            pWrapper.addEventListener('mouseenter', stopAutoAdvance);
+            pWrapper.addEventListener('mouseleave', startAutoAdvance);
+        }
+
+        portfolioGoTo(0);
+        startAutoAdvance();
+    }
+
+    // ─── Testimonial Slider ───────────────────────────────────────
+    // ─── Testimonial Slider ───────────────────────────────────────
+const track = document.getElementById('testimonialTrack');
+const dots = document.querySelectorAll('.testimonial-dot');
+const testimonials = document.querySelectorAll('.testimonial');
+const prevBtn = document.getElementById('testimonialPrev');
+const nextBtn = document.getElementById('testimonialNext');
+
+if (track && testimonials.length > 0) {
+    let currentIndex = 0;
+
+    function updateSlider(index) {
+        // Wrap around
+        if (index < 0) index = testimonials.length - 1;
+        if (index >= testimonials.length) index = 0;
+
+        testimonials.forEach(t => t.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+
+        const offset = index * -100;
+        track.style.transform = `translateX(${offset}%)`;
+
+        testimonials[index].classList.add('active');
+        if (dots[index]) dots[index].classList.add('active');
+        currentIndex = index;
+    }
+
+    // Dot navigation
+    dots.forEach(dot => {
+        dot.addEventListener('click', function() {
+            updateSlider(parseInt(this.getAttribute('data-index')));
+        });
+    });
+
+    // Arrow buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => updateSlider(currentIndex - 1));
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => updateSlider(currentIndex + 1));
+    }
+
+    // Auto-advance
+    setInterval(() => {
+        updateSlider(currentIndex + 1);
+    }, 5000);
+}
+
+    // ─── Portfolio Single Carousel (if present) ────────────────────
+    const mainImg = document.getElementById('carouselMainImage');
+    if (mainImg && typeof portfolioImages !== 'undefined') {
+        const images = portfolioImages;
+        const thumbnails = document.querySelectorAll('.carousel-thumbnail');
+        const prevBtn = document.querySelector('.carousel-prev');
+        const nextBtn = document.querySelector('.carousel-next');
+        let currentIndex = 0;
+
+        function updateCarousel(index) {
+            if (index < 0) index = images.length - 1;
+            if (index >= images.length) index = 0;
+            currentIndex = index;
+            mainImg.src = images[index];
+            thumbnails.forEach((thumb, i) => thumb.classList.toggle('active', i === index));
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => updateCarousel(currentIndex - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => updateCarousel(currentIndex + 1));
+        thumbnails.forEach((thumb, i) => thumb.addEventListener('click', () => updateCarousel(i)));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') updateCarousel(currentIndex - 1);
+            else if (e.key === 'ArrowRight') updateCarousel(currentIndex + 1);
+        });
+    }
+
+    // ─── Swipe support for sliders (mobile) ──────────────────────
+    function addSwipeSupport(element, onSwipeLeft, onSwipeRight) {
+        let startX = 0;
+        element.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+        element.addEventListener('touchend', e => {
+            const diff = startX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) onSwipeLeft();
+                else onSwipeRight();
+            }
+        }, { passive: true });
+    }
+
+    // Swipe on portfolio slider
+    const portfolioWrapper = document.querySelector('.portfolio-coverflow');
+    if (portfolioWrapper && typeof portfolioGoTo === 'function') {
+        addSwipeSupport(portfolioWrapper,
+            () => portfolioGoTo(pCurrent + 1),
+            () => portfolioGoTo(pCurrent - 1)
+        );
+    }
+
+    // Swipe on testimonial slider
+    const testimonialWrapper = document.querySelector('.testimonial-wrapper');
+    if (testimonialWrapper && typeof updateSlider === 'function') {
+        addSwipeSupport(testimonialWrapper,
+            () => updateSlider(currentIndex + 1),
+            () => updateSlider(currentIndex - 1)
+        );
+    }
+
+});

@@ -47,6 +47,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // ─── Hero video carousel (crossfade, fixed order, loops back to 1st) ──
+    const heroSlideFrames = document.querySelectorAll('.video-slide iframe');
+    if (heroSlideFrames.length) {
+        const vimeoScript = document.createElement('script');
+        vimeoScript.src = 'https://player.vimeo.com/api/player.js';
+        document.head.appendChild(vimeoScript);
+
+        vimeoScript.onload = () => {
+            const slideEls = document.querySelectorAll('.video-slide');
+            const players = Array.from(heroSlideFrames).map(f => new Vimeo.Player(f));
+            let current = 0;
+            const CROSSFADE_MS = 1500; // must match the .video-slide CSS transition duration
+
+            players.forEach((player, i) => {
+                player.setVolume(0);
+                if (i !== 0) player.pause();
+                player.on('ended', () => advance(i));
+            });
+
+            function advance(fromIndex) {
+                if (fromIndex !== current) return; // ignore late/duplicate events
+                const next = (current + 1) % players.length;
+
+                // Seek and play are independent calls now - if setCurrentTime
+                // rejects or is slow, play() still fires regardless.
+                players[next].setCurrentTime(0).catch(() => {});
+                players[next].play().catch(() => {});
+
+                slideEls[current].classList.remove('active');
+                slideEls[next].classList.add('active');
+
+                const prev = current;
+                current = next;
+
+                setTimeout(() => players[prev].pause(), CROSSFADE_MS);
+            }
+        };
+    }
+
     // ─── Mobile menu ─────────────────────────────────────────────
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');

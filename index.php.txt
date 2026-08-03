@@ -3,7 +3,18 @@
 <!-- Hero Section (unchanged, already has parallax via JS) -->
 <section class="hero">
     <div class="hero-bg"></div>
-    <div class="hero-image" id="heroImage"></div>
+    <div class="hero-video-wrap" id="heroImage">
+        <div class="video-slide active">
+            <iframe src="https://player.vimeo.com/video/1215171026?background=1&autoplay=1&muted=1&loop=0"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    title="Hero background video 1"></iframe>
+        </div>
+        <div class="video-slide">
+            <iframe src="https://player.vimeo.com/video/1215171025?background=1&muted=1&loop=0"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    title="Hero background video 2"></iframe>
+        </div>
+    </div>
     <div class="hero-content">
         <p class="hero-subtitle">Luxury Interior Design Studio</p>
         <h1 class="hero-title">Crafting Spaces That Tell Your Story</h1>
@@ -18,7 +29,35 @@
         <div class="scroll-line"></div>
     </div>
 </section>
-
+<!-- Philosophy Section (homepage) -->
+<section class="philosophy parallax-section philosophy-home" id="philosophy-home">
+    <div class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920&q=80');"></div>
+    <div class="parallax-overlay" style="background: rgba(44,40,32,0.7);"></div>
+    <div class="section-content">
+        <div class="reveal">
+            <p class="section-label">Our Philosophy</p>
+            <h2 class="section-title">Design is not just what it looks like.<br>Design is how it makes you feel.</h2>
+            <p class="philosophy-quote">"We create spaces that breathe, that welcome, that inspire moments of quiet contemplation and joyful gathering alike."</p>
+        </div>
+        <div class="philosophy-pillars reveal">
+            <div class="pillar">
+                <div class="pillar-icon">I</div>
+                <h3>Intentionality</h3>
+                <p>Every element serves a purpose. We eliminate the superfluous to amplify what truly matters.</p>
+            </div>
+            <div class="pillar">
+                <div class="pillar-icon">II</div>
+                <h3>Timelessness</h3>
+                <p>We design beyond trends, creating spaces that remain relevant and beautiful for generations.</p>
+            </div>
+            <div class="pillar">
+                <div class="pillar-icon">III</div>
+                <h3>Harmony</h3>
+                <p>The perfect balance of form, function, light, and texture creates environments of profound peace.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 
 <!-- Portfolio Section (unchanged structure but now with parallax background) -->
@@ -161,11 +200,13 @@
                     </div>
                     <div class="contact-item">
                         <label>Phone</label>
-                        <a href="tel:7014249104">7014249104</a>
+                        <a href="tel:7014249104">+91 7014249104</a>
+						<br>
+						<a href="tel:7014249104">+91 8376014824</a>
                     </div>
                     <div class="contact-item">
                         <label>Studio</label>
-                        <span>shivalik<br>Malviya nagar, New delhi</span>
+                        <span>A-block, Shivalik<br>Malviya nagar, New delhi<br>110017</span>
                     </div>
                 </div>
             </div>

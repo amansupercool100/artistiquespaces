@@ -60,10 +60,61 @@ document.addEventListener('DOMContentLoaded', function() {
             let current = 0;
             const CROSSFADE_MS = 1500; // must match the .video-slide CSS transition duration
 
+            // ─── True crop-to-fill sizing (works for landscape AND portrait/reel clips) ──
+            const videoAspects = []; // stores {w, h} per iframe once known
+
+            function sizeIframeToCover(iframe, vw, vh) {
+                if (!heroImage || !vw || !vh) return;
+                const cw = heroImage.clientWidth;
+                const ch = heroImage.clientHeight;
+                if (!cw || !ch) return;
+                const containerRatio = cw / ch;
+                const videoRatio = vw / vh;
+                let w, h;
+                if (videoRatio > containerRatio) {
+                    // video is relatively wider than the box -> match height, let width overflow (crop sides)
+                    h = ch;
+                    w = ch * videoRatio;
+                } else {
+                    // video is relatively taller than the box -> match width, let height overflow (crop top/bottom)
+                    w = cw;
+                    h = cw / videoRatio;
+                }
+                iframe.style.width = Math.ceil(w) + 'px';
+                iframe.style.height = Math.ceil(h) + 'px';
+            }
+
+            function resizeAllVideos() {
+                heroSlideFrames.forEach((iframe, i) => {
+                    const dim = videoAspects[i];
+                    if (dim) sizeIframeToCover(iframe, dim.w, dim.h);
+                });
+            }
+
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(resizeAllVideos, 150);
+            });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(resizeAllVideos, 200);
+            });
+
             players.forEach((player, i) => {
                 player.setVolume(0);
                 if (i !== 0) player.pause();
                 player.on('ended', () => advance(i));
+
+                Promise.all([player.getVideoWidth(), player.getVideoHeight()])
+                    .then(([w, h]) => {
+                        videoAspects[i] = { w, h };
+                        sizeIframeToCover(heroSlideFrames[i], w, h);
+                    })
+                    .catch(() => {
+                        // Fallback: assume standard 16:9 if dimensions can't be read
+                        videoAspects[i] = { w: 16, h: 9 };
+                        sizeIframeToCover(heroSlideFrames[i], 16, 9);
+                    });
             });
 
             function advance(fromIndex) {

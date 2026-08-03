@@ -148,6 +148,7 @@ Version: 4.0
         /* Hero Section */
         .hero {
             height: 100vh;
+            height: 100dvh; /* accounts for mobile browser toolbars showing/hiding */
             position: relative;
             display: flex;
             align-items: center;
@@ -161,17 +162,40 @@ Version: 4.0
             background: linear-gradient(135deg, var(--color-beige) 0%, var(--color-taupe) 100%);
         }
 
-        .hero-image {
+        .hero-video-wrap {
             position: absolute;
             inset: 0;
-            background: url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920&q=80') center/cover;
-            opacity: 0.42;
-            transform: scale(1.08);
-            transition: transform 20s ease;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            pointer-events: none;
         }
 
-        .hero-image.loaded {
-            transform: scale(1);
+        .hero-video-wrap.loaded {
+            opacity: 0.42;
+        }
+
+        .hero-video-wrap iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            /* Vimeo's background=1 mode auto-covers the iframe box like
+               object-fit: cover, regardless of the source video's aspect
+               ratio (works the same for this portrait/reel clip as it
+               would for a landscape one) */
+            border: 0;
+        }
+
+        .video-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .video-slide.active {
+            opacity: 1;
         }
 
         .hero-content {
@@ -1810,4 +1834,9 @@ Version: 4.0
         height: 40px;
         font-size: 0.9rem;
     }
+}
+/* Homepage Philosophy – reduced height (~30% less padding) */
+.philosophy-home .section-content {
+    padding-top: 3rem;    /* was 8rem → about 37% reduction */
+    padding-bottom: 3rem; /* was 8rem */
 }
